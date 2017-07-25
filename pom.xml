@@ -16,7 +16,7 @@
   </licenses>
 
   <artifactId>git</artifactId>
-  <version>3.4.1</version>
+  <version>3.4.1-topicus1</version>
   <packaging>hpi</packaging>
   <name>Jenkins Git plugin</name>
   <description>Integrates Jenkins with GIT SCM</description>
