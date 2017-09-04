@@ -146,7 +146,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
 
     /**
      * Holds all the behavioural traits of this source.
-     * 
+     *
      * @since 3.4.0
      */
     private List<SCMSourceTrait> traits = new ArrayList<>();
@@ -424,7 +424,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
             return Messages.GitSCMSource_DisplayName();
         }
 
-        public ListBoxModel doFillCredentialsIdItems(@AncestorInPath SCMSourceOwner context,
+        public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item context,
                                                      @QueryParameter String remote,
                                                      @QueryParameter String credentialsId) {
             if (context == null && !Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER) ||
@@ -442,7 +442,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
                     .includeCurrentValue(credentialsId);
         }
 
-        public FormValidation doCheckCredentialsId(@AncestorInPath SCMSourceOwner context,
+        public FormValidation doCheckCredentialsId(@AncestorInPath Item context,
                                                    @QueryParameter String remote,
                                                    @QueryParameter String value) {
             if (context == null && !Jenkins.getActiveInstance().hasPermission(Jenkins.ADMINISTER) ||
