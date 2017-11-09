@@ -18,6 +18,8 @@ import hudson.matrix.MatrixRun;
 import hudson.model.*;
 import hudson.model.Descriptor.FormException;
 import hudson.model.Hudson.MasterComputer;
+import hudson.model.Queue;
+import hudson.model.queue.Tasks;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
 import hudson.plugins.git.extensions.GitClientConflictException;
 import hudson.plugins.git.extensions.GitClientType;
@@ -762,8 +764,14 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             String ucCredentialsId = uc.getCredentialsId();
             if (ucCredentialsId != null) {
                 String url = getParameterString(uc.getUrl(), environment);
-                List<StandardUsernameCredentials> urlCredentials = CredentialsProvider.lookupCredentials(StandardUsernameCredentials.class, project,
-                                        ACL.SYSTEM, URIRequirementBuilder.fromUri(url).build());
+                List<StandardUsernameCredentials> urlCredentials = CredentialsProvider.lookupCredentials(
+                        StandardUsernameCredentials.class,
+                        project,
+                        project instanceof Queue.Task
+                                ? Tasks.getDefaultAuthenticationOf((Queue.Task)project)
+                                : ACL.SYSTEM,
+                        URIRequirementBuilder.fromUri(url).build()
+                );
                 CredentialsMatcher ucMatcher = CredentialsMatchers.withId(ucCredentialsId);
                 CredentialsMatcher idMatcher = CredentialsMatchers.allOf(ucMatcher, GitClient.CREDENTIALS_MATCHER);
                 StandardUsernameCredentials credentials = CredentialsMatchers.firstOrNull(urlCredentials, idMatcher);
@@ -1156,8 +1164,6 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         listener.getLogger().println("Checking out " + revToBuild.revision);
 
-        printCommitMessageToLog(listener, git, revToBuild);
-
         CheckoutCommand checkoutCommand = git.checkout().branch(localBranchName).ref(revToBuild.revision.getSha1String()).deleteBranchIfExist(true);
         for (GitSCMExtension ext : this.getExtensions()) {
             ext.decorateCheckoutCommand(this, build, git, listener, checkoutCommand);
@@ -1168,6 +1174,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         } catch (GitLockFailedException e) {
             // Rethrow IOException so the retry will be able to catch it
             throw new IOException("Could not checkout " + revToBuild.revision.getSha1String(), e);
+        }
+
+        // Needs to be after the checkout so that revToBuild is in the workspace
+        try {
+            printCommitMessageToLog(listener, git, revToBuild);
+        } catch (GitException ge) {
+            listener.getLogger().println("Exception logging commit message for " + revToBuild + ": " + ge.getMessage());
         }
 
         // Don't add the tag and changelog if we've already processed this BuildData before.
