@@ -17,7 +17,6 @@ import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixRun;
 import hudson.model.*;
 import hudson.model.Descriptor.FormException;
-import hudson.model.Hudson.MasterComputer;
 import hudson.model.Queue;
 import hudson.model.queue.Tasks;
 import hudson.plugins.git.browser.GitRepositoryBrowser;
@@ -146,7 +145,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     public static List<UserRemoteConfig> createRepoList(String url, String credentialsId) {
-        List<UserRemoteConfig> repoList = new ArrayList<UserRemoteConfig>();
+        List<UserRemoteConfig> repoList = new ArrayList<>();
         repoList.add(new UserRemoteConfig(url, null, null, credentialsId));
         return repoList;
     }
@@ -618,7 +617,8 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return requiresWorkspaceForPolling(new EnvVars());
     }
 
-    private boolean requiresWorkspaceForPolling(EnvVars environment) {
+    /* Package protected for test access */
+    boolean requiresWorkspaceForPolling(EnvVars environment) {
         for (GitSCMExtension ext : getExtensions()) {
             if (ext.requiresWorkspaceForPolling()) return true;
         }
@@ -963,11 +963,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         public <T> T actOnBuild(ContextCallable<Run<?,?>, T> callable) throws IOException, InterruptedException {
-            return callable.invoke(build,Hudson.MasterComputer.localChannel);
+            return callable.invoke(build, FilePath.localChannel);
         }
 
         public <T> T actOnProject(ContextCallable<Job<?,?>, T> callable) throws IOException, InterruptedException {
-            return callable.invoke(project, MasterComputer.localChannel);
+            return callable.invoke(project, FilePath.localChannel);
         }
 
         public Run<?, ?> getBuild() {
@@ -1224,7 +1224,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         if (!buildDataAlreadyPresent) {
             if (build.getActions(AbstractScmTagAction.class).isEmpty()) {
                 // only add the tag action if we can be unique as AbstractScmTagAction has a fixed UrlName
-                // so only one of the actions is addressible by users
+                // so only one of the actions is addressable by users
                 build.addAction(new GitTagAction(build, workspace, revToBuild.revision));
             }
 
