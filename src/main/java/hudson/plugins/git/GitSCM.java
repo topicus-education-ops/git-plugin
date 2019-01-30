@@ -113,6 +113,7 @@ import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static java.lang.String.format;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isBlank;
 
@@ -825,7 +826,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         for (UserRemoteConfig uc : getUserRemoteConfigs()) {
             String ucCredentialsId = uc.getCredentialsId();
-            if (ucCredentialsId != null) {
+            if (ucCredentialsId == null) {
+                listener.getLogger().println("No credentials specified");
+            } else {
                 String url = getParameterString(uc.getUrl(), environment);
                 List<StandardUsernameCredentials> urlCredentials = CredentialsProvider.lookupCredentials(
                         StandardUsernameCredentials.class,
@@ -840,9 +843,12 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                 StandardUsernameCredentials credentials = CredentialsMatchers.firstOrNull(urlCredentials, idMatcher);
                 if (credentials != null) {
                     c.addCredentials(url, credentials);
+                    listener.getLogger().println(format("using credential %s", credentials.getId()));
                     if (project != null && project.getLastBuild() != null) {
                         CredentialsProvider.track(project.getLastBuild(), credentials);
                     }
+                } else {
+                    listener.getLogger().println(format("Warning: CredentialId \"%s\" could not be found.", ucCredentialsId));
                 }
             }
         }
@@ -909,15 +915,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
 
-    @SuppressFBWarnings(value="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification="Jenkins.getInstance() is not null")
+    @CheckForNull
     public GitTool resolveGitTool(TaskListener listener) {
-        if (gitTool == null) return GitTool.getDefaultInstallation();
-        GitTool git =  Jenkins.getInstance().getDescriptorByType(GitTool.DescriptorImpl.class).getInstallation(gitTool);
-        if (git == null) {
-            listener.getLogger().println("Selected Git installation does not exist. Using Default");
-            git = GitTool.getDefaultInstallation();
-        }
-        return git;
+        return GitUtils.resolveGitTool(gitTool, listener);
     }
 
     public String getGitExe(Node builtOn, TaskListener listener) {
@@ -943,16 +943,9 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
         if (client == GitClientType.JGIT) return JGitTool.MAGIC_EXENAME;
 
-        GitTool tool = resolveGitTool(listener);
-        if (builtOn != null) {
-            try {
-                tool = tool.forNode(builtOn, listener);
-            } catch (IOException | InterruptedException e) {
-                listener.getLogger().println("Failed to get git executable");
-            }
-        }
-        if (env != null) {
-            tool = tool.forEnvironment(env);
+        GitTool tool = GitUtils.resolveGitTool(gitTool, listener);
+        if (tool == null) {
+            return null;
         }
 
         return tool.getGitExe();
