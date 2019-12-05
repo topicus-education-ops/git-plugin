@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>3.49</version>
+    <version>3.50</version>
     <relativePath />
   </parent>
 
@@ -16,7 +16,7 @@
   </licenses>
 
   <artifactId>git</artifactId>
-  <version>3.12.1-topicus1</version>
+  <version>4.0.0-topicus1</version>
   <packaging>hpi</packaging>
   <name>Jenkins Git plugin</name>
   <description>Integrates Jenkins with GIT SCM</description>
@@ -24,17 +24,13 @@
   <inceptionYear>2007</inceptionYear>
 
   <properties>
-    <revision>3.12.1</revision>
+    <revision>4.0.0</revision>
     <changelist>-SNAPSHOT</changelist>
     <jenkins.version>2.138.4</jenkins.version>
     <java.level>8</java.level>
     <no-test-jar>false</no-test-jar>
     <useBeta>true</useBeta>
-    <concurrency>1C</concurrency>
-    <scm-api-plugin.version>2.6.3</scm-api-plugin.version>
-    <jcasc.version>1.30</jcasc.version>
-    <maven.checkstyle.plugin.version>3.1.0</maven.checkstyle.plugin.version>
-    <maven.checkstyle.version>8.24</maven.checkstyle.version>
+    <forkCount>1C</forkCount>
     <linkXRef>false</linkXRef>
   </properties>
 
@@ -43,14 +39,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>${maven.checkstyle.plugin.version}</version>
-	<dependencies>
-	  <dependency>
-	    <groupId>com.puppycrawl.tools</groupId>
-	    <artifactId>checkstyle</artifactId>
-	    <version>${maven.checkstyle.version}</version>
-	  </dependency>
-	</dependencies>
+        <version>3.1.0</version>
         <configuration>
           <configLocation>google_checks.xml</configLocation>
           <failOnViolation>true</failOnViolation>
@@ -66,80 +55,63 @@
     </repository>
   </repositories>
 
-    <developers>
-        <developer>
-            <id>kohsuke</id>
-            <name>Kohsuke Kawaguchi</name>
-        </developer>
-        <developer>
-            <id>MarkEWaite</id>
-            <name>Mark Waite</name>
-            <email>mark.earl.waite@gmail.com</email>
-        </developer>
-        <developer>
-            <id>stephenconnolly</id>
-            <name>Stephen Connolly</name>
-        </developer>
-    </developers>
-
+  <developers>
+    <developer>
+      <id>markewaite</id>
+      <name>Mark Waite</name>
+      <email>mark.earl.waite@gmail.com</email>
+    </developer>
+    <developer>
+      <id>rsandell</id>
+      <name>Robert Sandell</name>
+      <email>rsandell@cloudbees.com</email>
+      <url>http://rsandell.com</url>
+    </developer>
+    <developer>
+      <id>fcojfernandez</id>
+      <name>Francisco J. Fernández</name>
+      <email>fjfernandez@cloudbees.com</email>
+    </developer>
+  </developers>
 
   <dependencies>
     <dependency>
-      <groupId>joda-time</groupId>
-      <artifactId>joda-time</artifactId>
-      <version>2.9.5</version>
-    </dependency>
-
-    <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>structs</artifactId>
-      <version>1.19</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git-client</artifactId>
-      <version>2.8.0-topicus1</version>
+      <version>3.0.0-topicus1</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>credentials</artifactId>
-      <version>2.1.18</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>ssh-credentials</artifactId>
-      <version>1.13</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>scm-api</artifactId>
-      <version>${scm-api-plugin.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.jenkins-ci.plugins.workflow</groupId>
-          <artifactId>workflow-step-api</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-step-api</artifactId>
-      <version>2.20</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-scm-step</artifactId>
-      <version>2.7</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>matrix-project</artifactId>
-      <version>1.7.1</version>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>mailer</artifactId>
-      <version>1.18</version>
     </dependency>
 
     <dependency>
@@ -160,15 +132,9 @@
     <dependency>
       <groupId>nl.jqno.equalsverifier</groupId>
       <artifactId>equalsverifier</artifactId>
-      <version>3.1.9</version>
+      <version>3.1.10</version>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>apache-httpcomponents-client-4-api</artifactId>
-      <scope>test</scope>
-    </dependency>
-
 
     <dependency><!-- we contribute AbstractBuildParameters for Git if it's available -->
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -179,7 +145,6 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>token-macro</artifactId>
-      <version>1.12.1</version> <!-- Depends on Jenkins 1.609 -->
       <optional>true</optional>
     </dependency>
     <dependency>
@@ -188,24 +153,12 @@
       <version>0.6</version>
       <scope>test</scope>
     </dependency>
+    <!-- intentionally staying with promoted-builds 3.2 on advice of Oleg Nenashev -->
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>promoted-builds</artifactId>
-      <version>2.27</version>
+      <version>3.2</version>
       <optional>true</optional>
-      <exclusions>
-        <exclusion>
-          <groupId>org.sonatype.sisu</groupId>
-          <artifactId>sisu-guava</artifactId>
-        </exclusion>
-        <exclusion>
-          <!-- promoted-builds requests 1.9.2, core requests 1.8.4 -->
-          <!-- use core version, rather than promoted builds version -->
-          <!-- trust this optional reference will be harmless -->
-          <groupId>org.apache.ant</groupId>
-          <artifactId>ant</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
@@ -216,13 +169,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>scm-api</artifactId>
-      <version>${scm-api-plugin.version}</version>
       <classifier>tests</classifier>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>workflow-cps</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -249,14 +196,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-cps-global-lib</artifactId>
-      <version>2.14</version>
       <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.commons</groupId>
-          <artifactId>commons-lang3</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.xmlunit</groupId>
@@ -265,26 +205,26 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>workflow-api</artifactId>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>git-tag-message</artifactId>
+      <version>1.6.1</version>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>workflow-support</artifactId>
-      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.jenkins-ci.plugins</groupId>
+          <artifactId>git</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <!-- JCasC compatibility -->
     <dependency>
       <groupId>io.jenkins</groupId>
       <artifactId>configuration-as-code</artifactId>
-      <version>${jcasc.version}</version>
-      <scope>test</scope>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>io.jenkins</groupId>
       <artifactId>configuration-as-code</artifactId>
-      <version>${jcasc.version}</version>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
@@ -294,8 +234,8 @@
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom</artifactId>
-        <version>2.138.1</version>
+        <artifactId>bom-2.138.x</artifactId>
+        <version>3</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
@@ -306,7 +246,7 @@
     <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
     <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
-    <tag>git-3.12.1</tag>
+    <tag>git-4.0.0</tag>
   </scm>
 
   <pluginRepositories>
