@@ -92,8 +92,6 @@ import jenkins.scm.impl.form.NamedArrayList;
 import jenkins.scm.impl.trait.Discovery;
 import jenkins.scm.impl.trait.Selection;
 import jenkins.scm.impl.trait.WildcardSCMHeadFilterTrait;
-import org.acegisecurity.context.SecurityContext;
-import org.acegisecurity.context.SecurityContextHolder;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.URIish;
@@ -275,7 +273,7 @@ public class GitSCMSource extends AbstractGitSCMSource {
                     }
                 }
                 if (!templates.isEmpty()) {
-                    return new RefSpecsSCMSourceTrait(templates.toArray(new String[templates.size()]));
+                    return new RefSpecsSCMSourceTrait(templates.toArray(new String[0]));
                 }
             }
         }

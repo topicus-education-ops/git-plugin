@@ -73,6 +73,7 @@ import org.jenkinsci.plugins.gitclient.CloneCommand;
 import org.jenkinsci.plugins.gitclient.FetchCommand;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
@@ -144,7 +145,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     private boolean doGenerateSubmoduleConfigurations;
 
     @CheckForNull
-    public String gitTool = null;
+    public String gitTool;
     @CheckForNull
     private GitRepositoryBrowser browser;
     private Collection<SubmoduleConfig> submoduleCfg;
@@ -161,6 +162,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     @SuppressFBWarnings(value="SE_BAD_FIELD", justification="Known non-serializable field")
     private DescribableList<GitSCMExtension,GitSCMExtensionDescriptor> extensions;
 
+    @Whitelisted
     public Collection<SubmoduleConfig> getSubmoduleCfg() {
         return submoduleCfg;
     }
@@ -236,6 +238,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      *
      * @since 2.0
      */
+    @Whitelisted
     public DescribableList<GitSCMExtension, GitSCMExtensionDescriptor> getExtensions() {
         return extensions;
     }
@@ -278,7 +281,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
             List<RefSpec> rs = new ArrayList<>();
             rs.add(new RefSpec("+refs/heads/*:refs/remotes/origin/*"));
-            remoteRepositories.add(newRemoteConfig("origin", source, rs.toArray(new RefSpec[rs.size()])));
+            remoteRepositories.add(newRemoteConfig("origin", source, rs.toArray(new RefSpec[0])));
             if (branch != null) {
                 branches.add(new BranchSpec(branch));
             } else {
@@ -347,6 +350,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     @Override
+    @Whitelisted
     public GitRepositoryBrowser getBrowser() {
         return browser;
     }
@@ -429,6 +433,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return (gitDescriptor != null && gitDescriptor.isUseExistingAccountWithSameEmail());
     }
 
+    @Whitelisted
     public BuildChooser getBuildChooser() {
         BuildChooser bc;
 
@@ -504,7 +509,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     	return newRemoteConfig(
                 getParameterString(remoteRepository.getName(), env),
                 getParameterString(remoteRepository.getURIs().get(0).toPrivateString(), env),
-                refSpecs.toArray(new RefSpec[refSpecs.size()]));
+                refSpecs.toArray(new RefSpec[0]));
     }
 
     public RemoteConfig getRepositoryByName(String repoName) {
@@ -518,6 +523,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     @Exported
+    @Whitelisted
     public List<UserRemoteConfig> getUserRemoteConfigs() {
         if (userRemoteConfigs == null) {
             /* Prevent NPE when no remote config defined */
@@ -526,6 +532,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         return Collections.unmodifiableList(userRemoteConfigs);
     }
 
+    @Whitelisted
     public List<RemoteConfig> getRepositories() {
         // Handle null-value to ensure backwards-compatibility, ie project configuration missing the <repositories/> XML element
         if (remoteRepositories == null) {
@@ -570,6 +577,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     }
 
     @CheckForNull
+    @Whitelisted
     public String getGitTool() {
         return gitTool;
     }
@@ -732,7 +740,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
                             if (!branchSpec.matches(head, environment)) {
 
                                 // convert head `refs/(heads|tags|whatever)/branch` into shortcut notation `remote/branch`
-                                String name = head;
+                                String name;
                                 Matcher matcher = GIT_REF.matcher(head);
                                 if (matcher.matches()) name = remote + head.substring(matcher.group(1).length());
                                 else name = remote + "/" + head;
@@ -763,6 +771,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         // (Re)build if the working directory doesn't exist
         if (workingDirectory == null || !workingDirectory.exists()) {
+            listener.getLogger().println("[poll] Working Directory does not exist");
             return BUILD_NOW;
         }
 
@@ -1138,6 +1147,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         EnvVars environment = build.getEnvironment(listener);
         GitClient git = createClient(listener, environment, build, workspace);
 
+        if (launcher instanceof Launcher.DecoratedLauncher) {
+            // We cannot check for git instanceof CliGitAPIImpl vs. JGitAPIImpl here since (when running on an agent) we will actually have a RemoteGitImpl which is opaque.
+            listener.getLogger().println("Warning: JENKINS-30600: special launcher " + launcher + " will be ignored (a typical symptom is the Git executable not being run inside a designated container)");
+        }
+
         for (GitSCMExtension ext : extensions) {
             ext.beforeCheckout(this, build, git, listener);
         }
@@ -1251,7 +1265,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
      * </pre>
      *
      * <p>
-     * If Jenkin built B1, C1, B2, C3 in that order, then one'd prefer that the changelog of B2 only shows
+     * If Jenkins built B1, C1, B2, C3 in that order, then one'd prefer that the changelog of B2 only shows
      * just B1..B2, not C1..B2. To do this, we attribute every build to specific branches, and when we say
      * "since the previous build", what we really mean is "since the last build that built the same branch".
      *
@@ -1312,13 +1326,11 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
     }
 
-    // TODO: 2.60+ Delete this override.
-    @Override
     public void buildEnvVars(AbstractBuild<?, ?> build, Map<String, String> env) {
         buildEnvironment(build, env);
     }
 
-    // TODO: 2.60+ Switch to @Override
+    @Override
     public void buildEnvironment(Run<?, ?> build, java.util.Map<String, String> env) {
         Revision rev = fixNull(getBuildData(build)).getLastBuiltRevision();
         if (rev!=null) {
@@ -1690,11 +1702,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
     private static final long serialVersionUID = 1L;
 
+    @Whitelisted
     public boolean isDoGenerateSubmoduleConfigurations() {
         return this.doGenerateSubmoduleConfigurations;
     }
 
     @Exported
+    @Whitelisted
     public List<BranchSpec> getBranches() {
         return branches;
     }

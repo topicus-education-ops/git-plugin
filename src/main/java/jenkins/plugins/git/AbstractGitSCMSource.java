@@ -573,8 +573,8 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                     remoteReferences = Collections.emptyMap();
                 }
                 fetch.execute();
-                final Repository repository = client.getRepository();
-                try (RevWalk walk = new RevWalk(repository);
+                try (Repository repository = client.getRepository();
+                     RevWalk walk = new RevWalk(repository);
                      GitSCMSourceRequest request = context.newRequest(AbstractGitSCMSource.this, listener)) {
 
                     if (context.wantBranches()) {
@@ -951,8 +951,8 @@ public abstract class AbstractGitSCMSource extends SCMSource {
                                   @Override
                                   public SCMRevision run(GitClient client, String remoteName) throws IOException,
                                           InterruptedException {
-                                      final Repository repository = client.getRepository();
-                                      try (RevWalk walk = new RevWalk(repository)) {
+                                      try (final Repository repository = client.getRepository();
+                                           RevWalk walk = new RevWalk(repository)) {
                                           ObjectId ref = client.revParse(tagRef);
                                           RevCommit commit = walk.parseCommit(ref);
                                           long lastModified = TimeUnit.SECONDS.toMillis(commit.getCommitTime());
