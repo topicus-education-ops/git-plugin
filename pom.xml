@@ -102,11 +102,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>git-client</artifactId>
-<<<<<<< HEAD
-      <version>3.3.0-topicus1</version>
-=======
-      <version>3.5.1</version>
->>>>>>> git-4.4.4
+      <version>3.5.1-topicus1</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
