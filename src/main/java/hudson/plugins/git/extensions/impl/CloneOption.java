@@ -14,6 +14,7 @@ import hudson.plugins.git.extensions.GitSCMExtensionDescriptor;
 import hudson.plugins.git.util.GitUtils;
 import hudson.slaves.NodeProperty;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import org.eclipse.jgit.transport.RefSpec;
@@ -26,6 +27,7 @@ import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 
 /**
  * @author Kohsuke Kawaguchi
@@ -131,7 +133,10 @@ public class CloneOption extends GitSCMExtension {
     public void decorateCloneCommand(GitSCM scm, Run<?, ?> build, GitClient git, TaskListener listener, CloneCommand cmd) throws IOException, InterruptedException, GitException {
         cmd.shallow(shallow);
         if (shallow) {
-            int usedDepth = depth == null || depth < 1 ? 1 : depth;
+            int usedDepth = 1;
+            if (depth != null && depth > 0) {
+                usedDepth = depth;
+            }
             listener.getLogger().println("Using shallow clone with depth " + usedDepth);
             cmd.depth(usedDepth);
         }
@@ -139,6 +144,9 @@ public class CloneOption extends GitSCMExtension {
             listener.getLogger().println("Avoid fetching tags");
             cmd.tags(false);
         }
+
+        Node node = GitUtils.workspaceToNode(git.getWorkTree());
+
         if (honorRefspec) {
             listener.getLogger().println("Honoring refspec on initial clone");
             // Read refspec configuration from the first configured repository.
@@ -148,13 +156,12 @@ public class CloneOption extends GitSCMExtension {
             // configuration is treated as authoritative.
             // Git plugin does not support multiple independent repositories
             // in a single job definition.
+            EnvVars buildEnv = build.getEnvironment(listener);
             RemoteConfig rc = scm.getRepositories().get(0);
-            List<RefSpec> refspecs = rc.getFetchRefSpecs();
-            cmd.refspecs(refspecs);
+            cmd.refspecs(getRefSpecs(rc, buildEnv));
         }
         cmd.timeout(timeout);
 
-        Node node = GitUtils.workspaceToNode(git.getWorkTree());
         EnvVars env = build.getEnvironment(listener);
         Computer comp = node.toComputer();
         if (comp != null) {
@@ -166,6 +173,18 @@ public class CloneOption extends GitSCMExtension {
         cmd.reference(env.expand(reference));
     }
 
+    private static String getParameterString(@CheckForNull String original, @NonNull EnvVars env) {
+        return env.expand(original);
+    }
+
+    private static List<RefSpec> getRefSpecs(RemoteConfig repo, EnvVars env) {
+        List<RefSpec> refSpecs = new ArrayList<>();
+        for (RefSpec refSpec : repo.getFetchRefSpecs()) {
+            refSpecs.add(new RefSpec(getParameterString(refSpec.toString(), env)));
+        }
+        return refSpecs;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -174,7 +193,10 @@ public class CloneOption extends GitSCMExtension {
     public void decorateFetchCommand(GitSCM scm, GitClient git, TaskListener listener, FetchCommand cmd) throws IOException, InterruptedException, GitException {
         cmd.shallow(shallow);
         if (shallow) {
-            int usedDepth = depth == null || depth < 1 ? 1 : depth;
+            int usedDepth = 1;
+            if (depth != null && depth > 0) {
+                usedDepth = depth;
+            }
             listener.getLogger().println("Using shallow fetch with depth " + usedDepth);
             cmd.depth(usedDepth);
         }

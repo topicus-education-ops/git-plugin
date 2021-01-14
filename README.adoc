@@ -167,7 +167,7 @@ Show the entire commit summary in changes::
   Administrators that want to restore the old behavior may disable this setting.
 
 [[hide-credentials]]
-Hide credential identifier in job output::
+Hide credential usage in job output::
 
   If checked, the console log will not show the credential identifier used to clone a repository.
 
@@ -192,6 +192,19 @@ Preserve second fetch during initial checkout::
   Enabling this option will restore the second fetch operation.
   This setting is only needed if there is a bug in the redundant fetch removal logic.
   If you enable this setting, please report a git plugin issue that describes why you needed to enable it.
+
+[[do-not-add-git-tag-action-to-jobs]]
+Add git tag action to jobs::
+
+  If checked, the git tag action will be added to any builds that happen *after* the box is checked.
+  Prior to git plugin 4.5.0, the git tag action was always added.
+  Git plugin 4.5.0 and later will not add the git tag action to new builds unless the administrator enables it.
++
+The git tag action allows a user to apply a tag to the git repository in the workspace based on the git commit used in the build applying the tag.
+The git plugin does *not* push the applied tag to any other location.
+If the workspace is removed, the tag that was applied is lost.
+Tagging a workspace made sense when using centralized repositories that automatically applied the tag to the centralized repository.
+Applying a git tag in an agent workspace doesn't have many practical uses.
 
 [#repository-browser]
 === Repository Browser
@@ -844,7 +857,8 @@ Excluded Users::
   Using this behavior prevents the faster `git ls-remote` polling mechanism.
   It forces polling to require a workspace, as if you had selected the <<force-polling-using-workspace,Force polling using workspace>> extension.
 
-  Each exclusion uses literal pattern matching, and must be separated by a new line.
+  Each exclusion uses exact string comparison and must be separated by a new line.
+  User names are only excluded if they exactly match one of the names in this list.
 
 [#polling-ignores-commits-in-certain-paths]
 ==== Polling ignores commits in certain paths
@@ -1159,15 +1173,9 @@ Refer to link:Priorities.adoc#git-plugin-development-priorities[plugin developme
 
 == Remove Git Plugin BuildsByBranch BuildData Script
 
-This script is used to remove the static list of BuildsByBranch that is uselessly stored for each build by the Git Plugin.
+This script is used to remove the static list of BuildsByBranch that is stored for each build by the Git Plugin.
 
-* This is a workaround for the problem described here:
-https://issues.jenkins-ci.org/browse/JENKINS-19022
-* Updated to handle Matrix Project types.
-* Updated to better support SCM Polling
-* Updated to handle Projects inside Folders.
-* Updated to handle Pipeline job types (just call getJobNames() to find
-everything)
+This is a workaround for link:https://issues.jenkins-ci.org/browse/JENKINS-19022[JENKINS-19022]
 
 [source,groovy]
 ----
