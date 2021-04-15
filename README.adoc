@@ -28,22 +28,28 @@ Prior release notes are recorded in the git plugin repository link:CHANGELOG.ado
 == Pipelines
 
 The git plugin provides an SCM implementation to be used with the Pipeline SCM link:https://www.jenkins.io/doc/pipeline/steps/workflow-scm-step/[`checkout` step].
-The link:https://www.jenkins.io/doc/book/pipeline/getting-started/#snippet-generator["Pipeline Syntax" snippet generator] guides the user to select checkout options.
-The link:https://youtu.be/ai1kf4ihZUo[90 second video clip] linked below introduces the Pipeline Syntax snippet generator and shows how it is used to generate steps for the Jenkins Pipeline.
+The link:https://www.jenkins.io/redirect/pipeline-snippet-generator["Pipeline Syntax" snippet generator] guides the user to select checkout options.
+
+The link:https://youtu.be/ai1kf4ihZUo[90 second video clip] below introduces the Pipeline Syntax snippet generator and shows how it is used to generate steps for the Jenkins Pipeline.
 
 image:images/pipeline-syntax.png[link=https://youtu.be/ai1kf4ihZUo]
 
-////
+=== Multibranch Pipelines
 
-=== Organization Folders and Multibranch Pipelines
+The git plugin includes a multibranch provider for Jenkins link:https://www.jenkins.io/doc/book/pipeline/multibranch/[Multibranch Pipelines] and for Jenkins link:https://www.jenkins.io/doc/book/pipeline/multibranch/#organization-folders[Organization Folders].
+The git plugin multibranch provider is a "base implementation" that uses command line git.
+Users should prefer the multibranch implementation for their git provider when one is available.
+Multibranch implementations for specific git providers can use REST API calls to improve the Jenkins experience and add additional capabilities.
+Multibranch implementations are available for
+link:https://docs.cloudbees.com/docs/cloudbees-ci/latest/cloud-admin-guide/github-branch-source-plugin[GitHub],
+link:https://github.com/jenkinsci/bitbucket-branch-source-plugin/blob/master/docs/USER_GUIDE.adoc[Bitbucket],
+link:https://plugins.jenkins.io/gitlab-branch-source/[GitLab],
+link:https://plugins.jenkins.io/gitea/[Gitea], and
+link:https://plugins.jenkins.io/tuleap-git-branch-source/[Tuleap].
 
-The git plugin also includes a multibranch provider for Jenkins link:https://www.jenkins.io/doc/book/pipeline/multibranch/[Multibranch Pipelines] and for Jenkins link:https://www.jenkins.io/doc/book/pipeline/multibranch/#organization-folders[Organization Folders].
+The link:https://youtu.be/B_2FXWI6CWg[30 minute video clip] below introduces Multibranch Pipelines.
 
-The 5 minute video clip below introduces Multibranch Pipelines and Organization Folders.
-
-image:https://img.youtube.com/vi/ai1kf4ihZUo/maxresdefault.jpg[link=https://youtu.be/ai1kf4ihZUo]
-
-////
+image:images/multibranch-pipeline.png[link=https://youtu.be/B_2FXWI6CWg]
 
 [#configuration]
 == [[GitPlugin-ProjectConfiguration]]Configuration
@@ -105,6 +111,12 @@ The git plugin supports username / password credentials and private key credenti
 https://plugins.jenkins.io/credentials[Jenkins credentials plugin].
 It does not support other credential types like secret text, secret file, or certificates.
 Select credentials from the job definition drop down menu or enter their identifiers in Pipeline job definitions.
+
+When the remote repository is accessed with the **HTTP or HTTPS protocols**, the plugin requires a **username / password credential**.
+Other credential types will not work with HTTP or HTTPS protocols.
+
+When the remote repository is accessed with the **ssh protocol**, the plugin requires an **ssh private key credential**.
+Other credential types will not work with the ssh protocol.
 
 [#push-notification-from-repository]
 === [[GitPlugin-Pushnotificationfromrepository]]Push Notification From Repository
@@ -714,10 +726,10 @@ image:/images/git-checkout-to-specific-local-branch.png[Checkout to specific loc
 Branch name::
 
   If given, checkout the revision to build as HEAD on the named branch.
-  If value is an empty string or "**", then the branch name is computed from the remote branch without the origin. 
+  If value is an empty string or "**", then the branch name is computed from the remote branch without the origin.
   In that case, a remote branch 'origin/master' will be checked out to a local branch named 'master', and a remote branch 'origin/develop/new-feature' will be checked out to a local branch named 'develop/new-feature'.
   If a specific revision and not branch HEAD is checked out, then 'detached' will be used as the local branch name.
-  
+
 [#wipe-out-repository-and-force-clone]
 ==== Wipe out repository and force clone
 
@@ -817,6 +829,8 @@ If this option is selected, the git commit's "Author" value is used instead.
 
 [#tagging-extensions]
 === Tagging Extensions
+
+Tagging extensions allow the plugin to apply tags in the current workspace.
 
 [#create-a-tag-for-every-build]
 ==== Create a tag for every build
@@ -1247,7 +1261,7 @@ allItems = []
 for (name in jobNames) {
   allItems += hudsonInstance.getItemByFullName(name)
 }
- 
+
 // Iterate over all jobs and find the ones that have a hudson.plugins.git.util.BuildData
 // as an action.
 //

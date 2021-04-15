@@ -79,6 +79,7 @@ import java.io.Serializable;
 import java.io.Writer;
 import java.lang.reflect.InvocationTargetException;
 import java.text.MessageFormat;
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -149,6 +150,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
     public static final String GIT_COMMIT = "GIT_COMMIT";
     public static final String GIT_PREVIOUS_COMMIT = "GIT_PREVIOUS_COMMIT";
     public static final String GIT_PREVIOUS_SUCCESSFUL_COMMIT = "GIT_PREVIOUS_SUCCESSFUL_COMMIT";
+    public static final String GIT_URL = "GIT_URL";
 
     /**
      * All the configured extensions attached to this.
@@ -787,7 +789,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
 
         GitClient git = createClient(listener, environment, project, node, workingDirectory);
 
-        if (git.hasGitRepo()) {
+        if (git.hasGitRepo(false)) {
             // Repo is there - do a fetch
             listener.getLogger().println("Fetching changes from the remote Git repositories");
 
@@ -1203,7 +1205,7 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         List<RemoteConfig> repos = getParamExpandedRepos(build, listener);
         if (repos.isEmpty())    return; // defensive check even though this is an invalid configuration
 
-        if (git.hasGitRepo()) {
+        if (git.hasGitRepo(false)) {
             // It's an update
             if (repos.size() == 1)
                 log.println("Fetching changes from the remote Git repository");
@@ -1536,12 +1538,13 @@ public class GitSCM extends GitSCMBackwardCompatibility {
             repoCount++;
         }
 
-        if (userRemoteConfigs.size()==1){
-            env.put("GIT_URL", userRemoteConfigs.get(0).getUrl());
-        } else {
+        if (userRemoteConfigs.size()>0) {
+            env.put(GIT_URL, userRemoteConfigs.get(0).getUrl());
+        }
+        if (userRemoteConfigs.size()>1) {
             int count=1;
-            for(UserRemoteConfig config:userRemoteConfigs)   {
-                env.put("GIT_URL_"+count, config.getUrl());
+            for (UserRemoteConfig config:userRemoteConfigs) {
+                env.put(GIT_URL+"_"+count, config.getUrl());
                 count++;
             }
         }
@@ -1974,7 +1977,10 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         BuildData buildData = null;
         while (build != null) {
             List<BuildData> buildDataList = build.getActions(BuildData.class);
-            for (BuildData bd : buildDataList) {
+            // We need to get the latest recorded build data. It may happen
+            // that the build has more than one checkout of the same repo.
+            List<BuildData> buildDataListReverted = reversedView(buildDataList);
+            for (BuildData bd : buildDataListReverted) {
                 if (bd != null && isRelevantBuildData(bd)) {
                     buildData = bd;
                     break;
@@ -1987,6 +1993,26 @@ public class GitSCM extends GitSCMBackwardCompatibility {
         }
 
         return buildData;
+    }
+
+    /**
+     * Gets a reversed view of an unmodifiable list without using increasing space or time.
+     * @param list The list to revert.
+     * @param <T> The type of the elements of the list.
+     * @return The list <i>reverted</i>.
+     */
+    private <T> List<T> reversedView(final List<T> list) {
+        return new AbstractList<T>() {
+            @Override
+            public T get(int index) {
+                return list.get(list.size() - 1 - index);
+            }
+
+            @Override
+            public int size() {
+                return list.size();
+            }
+        };
     }
 
     /**
